@@ -6,7 +6,7 @@
         "en": "Continous Integration server for YunoHost apps"
     },
     "version": "1.0~ynh1",
-    "url": "ttps://github.com/YunoHost/CI_package_check",
+    "url": "https://github.com/YunoHost/CI_package_check",
     "upstream": {
         "license": "AGPL-3.0-or-later",
         "website": "https://github.com/YunoHost/CI_package_check",
@@ -22,8 +22,7 @@
         "yunohost": ">= 11.0.0"
     },
     "multi_instance": false,
-    "services": [
-    ],
+    "services": [],
     "arguments": {
         "install": [
             {
@@ -32,7 +31,10 @@
                 "ask": {
                     "en": "Choose the ci_type language"
                 },
-                "choices": ["auto", "manual"],
+                "choices": [
+                    "auto",
+                    "manual"
+                ],
                 "default": "auto"
             },
             {
