@@ -15,7 +15,6 @@ source /usr/share/yunohost/helpers
 #=================================================
 
 ynh_clean_setup () {
-	#### Remove this function if there's nothing to clean before calling the remove script.
 	true
 }
 # Exit if an error occurs during the execution of the script
@@ -31,10 +30,8 @@ app=$YNH_APP_INSTANCE_NAME
 domain=$(ynh_app_setting_get --app=$app --key=domain)
 path_url=$(ynh_app_setting_get --app=$app --key=path)
 final_path=$(ynh_app_setting_get --app=$app --key=final_path)
-db_name=$(ynh_app_setting_get --app=$app --key=db_name)
-db_user=$db_name
-phpversion=$(ynh_app_setting_get --app=$app --key=phpversion)
 datadir=$(ynh_app_setting_get --app=$app --key=datadir)
+yunorunner_instance=$(ynh_app_setting_get --app=$app --key=yunorunner_instance)
 
 #=================================================
 # CHECK IF THE APP CAN BE RESTORED
@@ -44,16 +41,17 @@ ynh_script_progression --message="Validating restoration parameters..." --weight
 test ! -d $final_path \
 	|| ynh_die --message="There is already a directory: $final_path "
 
+if ! yunohost app list --output-as json --quiet | jq -e --arg id $yunorunner_instance '.apps[] | select(.id == $id)' >/dev/null
+then
+	use_new_yunorunner_instance=1
+fi
+if ! yunohost app list --output-as json --quiet | jq -e --arg id lxd '.apps[] | select(.id == $id)' >/dev/null
+then
+	use_new_lxd_instance=1
+fi
+
 #=================================================
 # STANDARD RESTORATION STEPS
-#=================================================
-# RECREATE THE DEDICATED USER
-#=================================================
-ynh_script_progression --message="Recreating the dedicated system user..." --weight=1
-
-# Create the dedicated user (if not existing)
-ynh_system_user_create --username=$app --home_dir="$final_path"
-
 #=================================================
 # RESTORE THE APP MAIN DIR
 #=================================================
@@ -61,15 +59,9 @@ ynh_script_progression --message="Restoring the app main directory..." --weight=
 
 ynh_restore_file --origin_path="$final_path"
 
-# FIXME: this should be managed by the core in the future
-# Here, as a packager, you may have to tweak the ownerhsip/permissions
-# such that the appropriate users (e.g. maybe www-data) can access
-# files in some cases.
-# But FOR THE LOVE OF GOD, do not allow r/x for "others" on the entire folder -
-# this will be treated as a security issue.
 chmod 750 "$final_path"
 chmod -R o-rwx "$final_path"
-chown -R $app:www-data "$final_path"
+chown -R $yunorunner_instance:www-data "$final_path"
 
 #=================================================
 # RESTORE THE DATA DIRECTORY
@@ -78,26 +70,14 @@ ynh_script_progression --message="Restoring the data directory..." --weight=1
 
 ynh_restore_file --origin_path="$datadir" --not_mandatory
 
-mkdir -p $datadir
+mkdir -p $datadir/logs
+ynh_exec_as $yunorunner_instance ln -fs $datadir/badges $final_path/badges
+ynh_exec_as $yunorunner_instance ln -fs $datadir/logs $final_path/logs
+ynh_exec_as $yunorunner_instance ln -fs $datadir/summary $final_path/summary
 
-# FIXME: this should be managed by the core in the future
-# Here, as a packager, you may have to tweak the ownerhsip/permissions
-# such that the appropriate users (e.g. maybe www-data) can access
-# files in some cases.
-# But FOR THE LOVE OF GOD, do not allow r/x for "others" on the entire folder -
-# this will be treated as a security issue.
 chmod 750 "$datadir"
 chmod -R o-rwx "$datadir"
-chown -R $app:www-data "$datadir"
-
-#=================================================
-# RESTORE FAIL2BAN CONFIGURATION
-#=================================================
-ynh_script_progression --message="Restoring the Fail2Ban configuration..." --weight=1
-
-ynh_restore_file --origin_path="/etc/fail2ban/jail.d/$app.conf"
-ynh_restore_file --origin_path="/etc/fail2ban/filter.d/$app.conf"
-ynh_systemd_action --action=restart --service_name=fail2ban
+chown -R $yunorunner_instance:www-data "$datadir"
 
 #=================================================
 # SPECIFIC RESTORATION
@@ -108,29 +88,15 @@ ynh_script_progression --message="Reinstalling dependencies..." --weight=1
 
 # Define and install dependencies
 ynh_install_app_dependencies $pkg_dependencies
-
-#=================================================
-# RESTORE THE PHP-FPM CONFIGURATION
-#=================================================
-ynh_script_progression --message="Restoring the PHP-FPM configuration..." --time --weight=1
-
-ynh_restore_file --origin_path="/etc/php/$phpversion/fpm/pool.d/$app.conf"
-
-#=================================================
-# RESTORE THE NGINX CONFIGURATION
-#=================================================
-ynh_script_progression --message="Restoring the NGINX web server configuration..." --time --weight=1
-
-ynh_restore_file --origin_path="/etc/nginx/conf.d/$domain.d/$app.conf"
-
-#=================================================
-# RESTORE THE MYSQL DATABASE
-#=================================================
-ynh_script_progression --message="Restoring the MySQL database..." --weight=1
-
-db_pwd=$(ynh_app_setting_get --app=$app --key=mysqlpwd)
-ynh_mysql_setup_db --db_user=$db_user --db_name=$db_name --db_pwd=$db_pwd
-ynh_mysql_connect_as --user=$db_user --password=$db_pwd --database=$db_name < ./db.sql
+if [ $use_new_yunorunner_instance -eq 1 ]; then
+	#app_dependencies="$app_dependencies yunorunner?domain=$domain&path=$path_url&ci_package_check_path=$final_path&ci_package_check_datadir=$datadir"
+	yunohost app install https://github.com/YunoHost-Apps/yunorunner_ynh/tree/f60a50aa9c1daacea6faa7b85018d5b0c95746bb --force --args "domain=$domain&path=$path_url&ci_package_check_path=$final_path&ci_package_check_datadir=$datadir"
+fi
+ynh_install_apps --apps="$app_dependencies"
+if [ $use_new_yunorunner_instance -eq 1 ]; then
+	yunorunner_instance=$(yunohost app list --output-as json --quiet | jq -re '.apps[] | select(.id  | contains("yunorunner")) | .id' | sort -V | tail -1)
+	ynh_app_setting_set --app=$app --key=yunorunner_instance --value=$yunorunner_instance
+fi
 
 #=================================================
 # RESTORE VARIOUS FILES
@@ -139,47 +105,112 @@ ynh_script_progression --message="Restoring various files..." --weight=1
 
 ynh_restore_file --origin_path="/etc/cron.d/$app"
 
-ynh_restore_file --origin_path="/etc/$app/"
+#=================================================
+# CONFIGURE YUNORUNNER
+#=================================================
+
+if [[ $yunorunner_instance == *"yunorunner"* ]]
+then
+	ynh_script_progression --message="Configuring YunoRunner..." --weight=1
+	# Retrieve YunoRunner settings
+	yunorunner_port=$(ynh_app_setting_get --app=$yunorunner_instance --key=port)
+	yunorunner_final_path=$(ynh_app_setting_get --app=$yunorunner_instance --key=final_path)
+
+	# Stop YunoRunner
+	ynh_systemd_action --service_name=$yunorunner_instance --action="stop" --log_path="systemd" --line_match="Stopped YunoRunner CI"
+
+	if [ $use_new_yunorunner_instance -eq 1 ]; then
+		# Remove the original database, in order to rebuilt it with the new config.
+		ynh_secure_remove --file="$yunorunner_final_path/db.sqlite"
+
+		# Create a random token for ciclic
+		cat /dev/urandom | tr -dc _A-Za-z0-9 | head -c80 | tee $yunorunner_final_path/token $yunorunner_final_path/tokens
+	fi
+
+	# For automatic / "main" CI we want to auto schedule jobs using the app list
+	if [ $ci_type == "auto" ]
+	then
+		monitor_apps_list="True"
+		monitor_git="True"
+		monitor_only_good_quality_apps="False"
+		monthly_jobs="True"
+		worker_count="1"
+	# For Dev CI, we want to control the job scheduling entirely
+	# (c.f. the github webhooks or scan_for_new_jobs_from_chroots cron job)
+	else
+		monitor_apps_list="False"
+		monitor_git="False"
+		monitor_only_good_quality_apps="False"
+		monthly_jobs="False"
+		worker_count="1"
+	fi
+	ynh_app_setting_set --app=$app --key=monitor_apps_list --value=$monitor_apps_list
+	ynh_app_setting_set --app=$app --key=monitor_git --value=$monitor_git
+	ynh_app_setting_set --app=$app --key=monitor_only_good_quality_apps --value=$monitor_only_good_quality_apps
+	ynh_app_setting_set --app=$app --key=monthly_jobs --value=$monthly_jobs
+	ynh_app_setting_set --app=$app --key=worker_count --value=$worker_count
+
+	ynh_add_config --template="yunorunner.config.py" --destination="$yunorunner_final_path/config.py"
+
+	chmod 400 "$yunorunner_final_path/config.py"
+	chown $yunorunner_instance:$yunorunner_instance "$yunorunner_final_path/config.py"
+
+	yunohost app makedefault -d "$domain" $yunorunner_instance
+fi
 
 #=================================================
-# RESTORE SYSTEMD
+# CONFIGURE LXD
 #=================================================
-ynh_script_progression --message="Restoring the systemd configuration..." --weight=1
+ynh_script_progression --message="Configuring LXD..." --weight=1
 
-ynh_restore_file --origin_path="/etc/systemd/system/$app.service"
-systemctl enable $app.service --quiet
+if [ $use_new_lxd_instance -eq 1 ]
+then
+	if [ $cluster -eq 1 ]
+	then
+		local free_space=$(df --output=avail / | sed 1d)
+		local btrfs_size=$(( $free_space * 90 / 100 / 1024 / 1024 ))
+		local lxc_network=$((1 + $RANDOM % 254))
 
-#=================================================
-# RESTORE THE LOGROTATE CONFIGURATION
-#=================================================
-ynh_script_progression --message="Restoring the logrotate configuration..." --weight=1
+		yunohost firewall allow TCP 8443
+		ynh_add_config --template="preseed.conf" --destination="$final_path/preseed.conf"
+		cat "$final_path/preseed.conf" | lxd init --preseed
+		ynh_delete_file_checksum --file="$final_path/preseed.conf"
+		ynh_secure_remove --file="$final_path/preseed.conf"
+		lxc config set core.https_address [::]
+	else
+		lxd init --auto --storage-backend=dir
+	fi
+fi
 
-ynh_restore_file --origin_path="/etc/logrotate.d/$app"
+# ci_user will be the one launching job, gives it permission to run lxd commands
+usermod -a -G lxd $yunorunner_instance
 
-#=================================================
-# INTEGRATE SERVICE IN YUNOHOST
-#=================================================
-ynh_script_progression --message="Integrating service in YunoHost..." --weight=1
+# We need a home for the "su" command later ?
+mkdir -p /home/$yunorunner_instance
+chown -R $yunorunner_instance /home/$yunorunner_instance
 
-yunohost service add $app --description="A short description of the app" --log="/var/log/$app/$app.log"
+su $yunorunner_instance -s /bin/bash -c "lxc remote add yunohost https://devbaseimgs.yunohost.org --public --accept-certificate"
+
+lxdbr0_network_address=$(lxc network get lxdbr0  ipv4.address | cut -d'.' -f1-3)
+mkdir -p "/etc/yunohost/hooks.d/post_iptable_rules/"
+ynh_add_config --template="95-lxd-custom" --destination="/etc/yunohost/hooks.d/post_iptable_rules/95-lxd-custom"
+chmod +x /etc/yunohost/hooks.d/post_iptable_rules/95-lxd-custom
+/etc/yunohost/hooks.d/post_iptable_rules/95-lxd-custom
 
 #=================================================
 # START SYSTEMD SERVICE
 #=================================================
-ynh_script_progression --message="Starting a systemd service..." --weight=1
 
-ynh_systemd_action --service_name=$app --action="start" --log_path="/var/log/$app/$app.log"
+if [[ $yunorunner_instance == *"yunorunner"* ]]
+then
+	ynh_script_progression --message="Starting a systemd service..." --weight=1
+
+	# Start a systemd service
+	ynh_systemd_action --service_name=$yunorunner_instance --action="start" --log_path="systemd" --line_match="Started YunoRunner CI" --timeout=30
+fi
 
 #=================================================
 # GENERIC FINALIZATION
-#=================================================
-# RELOAD NGINX AND PHP-FPM
-#=================================================
-ynh_script_progression --message="Reloading NGINX web server and PHP-FPM..." --weight=1
-
-ynh_systemd_action --service_name=php$phpversion-fpm --action=reload
-ynh_systemd_action --service_name=nginx --action=reload
-
 #=================================================
 # END OF SCRIPT
 #=================================================
