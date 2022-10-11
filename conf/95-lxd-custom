@@ -20,5 +20,3 @@ iptables -w -A POSTROUTING -s __LXDBR0_NETWORK_ADDRESS__.0/24 ! -d __LXDBR0_NETW
 iptables -w -A POSTROUTING -o lxdbr0 -p udp -m udp --dport 68 -m comment --comment "generated for LXD network lxdbr0" -j CHECKSUM --checksum-fill
 
 exit 0
-
-

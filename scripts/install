@@ -211,7 +211,7 @@ chown -R $yunorunner_instance /home/$yunorunner_instance
 
 su $yunorunner_instance -s /bin/bash -c "lxc remote add yunohost https://devbaseimgs.yunohost.org --public --accept-certificate"
 
-lxdbr0_network_address=$(lxc network get lxdbr0  ipv4.address | cut -d'.' -f1-3)
+lxdbr0_network_address=$(lxc network get lxdbr0 ipv4.address | cut -d'.' -f1-3)
 mkdir -p "/etc/yunohost/hooks.d/post_iptable_rules/"
 ynh_add_config --template="95-lxd-custom" --destination="/etc/yunohost/hooks.d/post_iptable_rules/95-lxd-custom"
 chmod +x /etc/yunohost/hooks.d/post_iptable_rules/95-lxd-custom
