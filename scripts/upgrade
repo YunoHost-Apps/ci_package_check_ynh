@@ -12,7 +12,7 @@ source /usr/share/yunohost/helpers
 #=================================================
 # LOAD SETTINGS
 #=================================================
-ynh_script_progression --message="Loading installation settings..." --weight=1
+ynh_script_progression --message="Loading settings..." --weight=1
 
 app=$YNH_APP_INSTANCE_NAME
 
@@ -21,6 +21,7 @@ path_url=$(ynh_app_setting_get --app=$app --key=path)
 final_path=$(ynh_app_setting_get --app=$app --key=final_path)
 ci_type=$(ynh_app_setting_get --app=$app --key=ci_type)
 yunorunner_instance=$(ynh_app_setting_get --app=$app --key=yunorunner_instance)
+cluster=$(ynh_app_setting_get --app=$app --key=cluster)
 
 #=================================================
 # CHECK VERSION
@@ -99,6 +100,16 @@ chown $yunorunner_instance:$yunorunner_instance "$final_path/config"
 
 #=================================================
 # GENERIC FINALIZATION
+#=================================================
+# INTEGRATE SERVICE IN YUNOHOST
+#=================================================
+ynh_script_progression --message="Integrating service in YunoHost..." --weight=1
+
+if [ $cluster -eq 1 ]
+then
+	yunohost service add lxd --log="/var/log/lxd/lxd.log" --needs_exposed_ports 8443
+fi
+
 #=================================================
 # END OF SCRIPT
 #=================================================
