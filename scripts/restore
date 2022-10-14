@@ -43,10 +43,12 @@ ynh_script_progression --message="Validating restoration parameters..." --weight
 test ! -d $final_path \
 	|| ynh_die --message="There is already a directory: $final_path "
 
+use_new_yunorunner_instance=0
 if ! yunohost app list --output-as json --quiet | jq -e --arg id $yunorunner_instance '.apps[] | select(.id == $id)' >/dev/null
 then
 	use_new_yunorunner_instance=1
 fi
+use_new_lxd_instance=0
 if ! yunohost app list --output-as json --quiet | jq -e --arg id lxd '.apps[] | select(.id == $id)' >/dev/null
 then
 	use_new_lxd_instance=1
