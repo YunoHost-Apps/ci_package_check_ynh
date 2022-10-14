@@ -3,7 +3,7 @@
     "id": "ci_package_check",
     "packaging_format": 1,
     "description": {
-        "en": "Continous Integration server for YunoHost apps"
+        "en": "YunoHost continous Integration server"
     },
     "version": "1.0~ynh1",
     "url": "https://github.com/YunoHost/CI_package_check",
