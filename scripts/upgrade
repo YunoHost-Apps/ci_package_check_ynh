@@ -87,9 +87,9 @@ ynh_install_apps --apps="$app_dependencies"
 ynh_script_progression --message="Updating a configuration file..." --weight=1
 
 pushd $final_path
-	pip3 install xmpppy
-	git clone https://github.com/YunoHost/package_check "./package_check"
-	$final_path/badges/get_badges.sh
+	ynh_exec_warn_less ynh_exec_as $yunorunner_instance pip3 install xmpppy
+	ynh_exec_warn_less ynh_exec_as $yunorunner_instance git clone https://github.com/YunoHost/package_check "./package_check"
+	ynh_exec_warn_less ynh_exec_as $yunorunner_instance $final_path/badges/get_badges.sh
 popd
 
 ynh_arch=$YNH_ARCH
