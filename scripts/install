@@ -115,9 +115,11 @@ ynh_script_progression --message="Creating a data directory..." --weight=1
 
 ynh_app_setting_set --app=$app --key=datadir --value=$datadir
 
-mkdir -p $datadir/logs
-mv -f $final_path/badges $datadir/
-mv -f $final_path/summary $datadir/
+mkdir -p $datadir/{badges logs summary}
+rsync -a $final_path/badges/ $datadir/badges/
+ynh_secure_remove --file="$final_path/badges"
+rsync -a $final_path/summary/ $datadir/summary/
+ynh_secure_remove --file="$final_path/summary"
 ynh_exec_as $yunorunner_instance ln -fs $datadir/badges $final_path/badges
 ynh_exec_as $yunorunner_instance ln -fs $datadir/logs $final_path/logs
 ynh_exec_as $yunorunner_instance ln -fs $datadir/summary $final_path/summary
