@@ -89,9 +89,9 @@ ynh_script_progression --message="Restoring the data directory..." --weight=1
 ynh_restore_file --origin_path="$datadir" --not_mandatory
 
 mkdir -p $datadir/logs
-ynh_exec_as $yunorunner_instance ln -fs $datadir/badges $final_path/badges
-ynh_exec_as $yunorunner_instance ln -fs $datadir/logs $final_path/logs
-ynh_exec_as $yunorunner_instance ln -fs $datadir/summary $final_path/summary
+ln -fs $datadir/badges $final_path/badges
+ln -fs $datadir/logs $final_path/logs
+ln -fs $datadir/summary $final_path/summary
 
 chmod 750 "$datadir"
 chmod -R o-rwx "$datadir"
