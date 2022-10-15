@@ -9,7 +9,7 @@ pkg_dependencies="wget git python3-pip lynx jq"
 
 ci_repository="https://github.com/YunoHost/CI_package_check"
 
-ci_release="a3d045e9eed3844408d5e4c7145f3a1102a75d73"
+ci_release="77fbdd03ddec4f62ff46c1d7554680b3db9e69b9"
 
 app_dependencies="lxd"
 
