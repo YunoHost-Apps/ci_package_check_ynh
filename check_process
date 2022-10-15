@@ -26,7 +26,7 @@
 		ci_type="manual"
 		cluster=0
 		password="1Strong-Password"
-		yunorunner_instance=""
+		yunorunner_instance="yunorunner"
 		domain="domain.tld"
 		path="/path"
 	; Checks
@@ -49,7 +49,7 @@
 		ci_type="manual"
 		cluster=0
 		password="1Strong-Password"
-		yunorunner_instance=""
+		yunorunner_instance="jenkins"
 		domain="domain.tld"
 		path="/path"
 	; Checks
