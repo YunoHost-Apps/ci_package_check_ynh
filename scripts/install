@@ -95,11 +95,11 @@ ynh_script_progression --message="Setting up source files..." --weight=1
 
 ynh_app_setting_set --app=$app --key=final_path --value=$final_path
 # Download, check integrity, uncompress and patch the source from app.src
-git init "$final_path"
+ynh_exec_warn_less git init "$final_path"
 pushd "$final_path"
-	git remote add origin "$ci_repository"
-	git fetch --quiet --depth=1 origin "$ci_release"
-	git reset --quiet --hard FETCH_HEAD
+	ynh_exec_warn_less git remote add origin "$ci_repository"
+	ynh_exec_warn_less git fetch --quiet --depth=1 origin "$ci_release"
+	ynh_exec_warn_less git reset --quiet --hard FETCH_HEAD
 popd
 
 chmod 750 "$final_path"
@@ -201,9 +201,10 @@ then
 		ynh_secure_remove --file="$final_path/preseed.conf"
 		lxc config set core.https_address [::]
 	else
-		lxd init --auto --storage-backend=dir
+		ynh_exec_warn_less lxd init --auto --storage-backend=dir
 	fi
 fi
+
 # ci_user will be the one launching job, gives it permission to run lxd commands
 usermod -a -G lxd $yunorunner_instance
 
@@ -225,9 +226,9 @@ chmod +x /etc/yunohost/hooks.d/post_iptable_rules/95-lxd-custom
 ynh_script_progression --message="Adding a configuration file..." --weight=1
 
 pushd $final_path
-	ynh_exec_as $yunorunner_instance pip3 install xmpppy
-	ynh_exec_as $yunorunner_instance git clone https://github.com/YunoHost/package_check "./package_check"
-	ynh_exec_as $yunorunner_instance $final_path/badges/get_badges.sh
+	ynh_exec_warn_less ynh_exec_as $yunorunner_instance pip3 install xmpppy
+	ynh_exec_warn_less ynh_exec_as $yunorunner_instance git clone https://github.com/YunoHost/package_check "./package_check"
+	ynh_exec_warn_less ynh_exec_as $yunorunner_instance $final_path/badges/get_badges.sh
 popd
 
 ynh_arch=$YNH_ARCH
