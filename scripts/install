@@ -210,11 +210,10 @@ fi
 # ci_user will be the one launching job, gives it permission to run lxd commands
 usermod -a -G lxd $yunorunner_instance
 
-# We need a home for the "su" command later ?
-mkdir -p /home/$yunorunner_instance
-chown -R $yunorunner_instance /home/$yunorunner_instance
-
-su $yunorunner_instance -s /bin/bash -c "lxc remote add yunohost https://devbaseimgs.yunohost.org --public --accept-certificate"
+if ! su $yunorunner_instance -s /bin/bash -c "lxc remote list" | grep -q "devbaseimgs.yunohost.org"
+then
+	su $yunorunner_instance -s /bin/bash -c "lxc remote add yunohost https://devbaseimgs.yunohost.org --public --accept-certificate"
+fi
 
 lxdbr0_network_address=$(lxc network get lxdbr0 ipv4.address | cut -d'.' -f1-3)
 mkdir -p "/etc/yunohost/hooks.d/post_iptable_rules/"
