@@ -18,6 +18,7 @@ app=$YNH_APP_INSTANCE_NAME
 
 final_path=$(ynh_app_setting_get --app=$app --key=final_path)
 datadir=$(ynh_app_setting_get --app=$app --key=datadir)
+use_new_yunorunner_instance=$(ynh_app_setting_get --app=$app --key=use_new_yunorunner_instance)
 
 #=================================================
 # STANDARD REMOVE
@@ -56,10 +57,11 @@ fi
 #=================================================
 ynh_script_progression --message="Removing dependencies..." --weight=1
 
-# For testing, to be removed
-yunohost app remove yunorunner
 # Remove metapackage and its dependencies
-#ynh_remove_apps
+if [ $use_new_yunorunner_instance -eq 1 ]; then
+	yunohost app remove yunorunner
+fi
+ynh_remove_apps
 ynh_remove_app_dependencies
 
 #=================================================

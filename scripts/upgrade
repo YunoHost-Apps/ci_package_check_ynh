@@ -75,7 +75,7 @@ chown -R $yunorunner_instance:www-data "$final_path"
 #=================================================
 ynh_script_progression --message="Upgrading dependencies..." --weight=1
 
-ynh_install_app_dependencies $pkg_dependencies
+ynh_exec_warn_less ynh_install_app_dependencies $pkg_dependencies
 #app_dependencies="$app_dependencies yunorunner?domain=$domain&path=$path_url&ci_package_check_path=$final_path&ci_package_check_datadir=$datadir"
 ynh_install_apps --apps="$app_dependencies"
 
