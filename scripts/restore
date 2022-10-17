@@ -34,6 +34,7 @@ datadir=$(ynh_app_setting_get --app=$app --key=datadir)
 yunorunner_instance=$(ynh_app_setting_get --app=$app --key=yunorunner_instance)
 cluster=$(ynh_app_setting_get --app=$app --key=cluster)
 ci_type=$(ynh_app_setting_get --app=$app --key=ci_type)
+use_new_yunorunner_instance=$(ynh_app_setting_get --app=$app --key=use_new_yunorunner_instance)
 
 #=================================================
 # CHECK IF THE APP CAN BE RESTORED
