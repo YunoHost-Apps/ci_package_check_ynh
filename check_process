@@ -21,7 +21,7 @@
 		change_url=1
 ;; Test with already installed yunorunner
 	; pre-install
-		sudo yunohost app install https://github.com/YunoHost-Apps/yunorunner_ynh/tree/dec7073dd3d014161c889ddbc9b17b1b9ee80681 --force --args "domain=$domain&path=$path_url&ci_package_check_path=$final_path&ci_package_check_datadir=$datadir"
+		sudo yunohost app install https://github.com/YunoHost-Apps/yunorunner_ynh/tree/dec7073dd3d014161c889ddbc9b17b1b9ee80681 --force --args "domain=sub.domain.tldn&path=/ci&ci_package_check_path=/opt/yunohost/ci_package_check&ci_package_check_datadir=/opt/yunohost/ci_package_check"
 	; Manifest
 		ci_type="manual"
 		cluster=0
