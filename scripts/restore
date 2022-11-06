@@ -155,6 +155,7 @@ then
 	ynh_app_setting_set --app=$app --key=monthly_jobs --value=$monthly_jobs
 	ynh_app_setting_set --app=$app --key=worker_count --value=$worker_count
 
+	ynh_delete_file_checksum --file="$yunorunner_final_path/config.py"
 	ynh_add_config --template="yunorunner.config.py" --destination="$yunorunner_final_path/config.py"
 
 	chmod 400 "$yunorunner_final_path/config.py"
