@@ -1,0 +1,4 @@
+# Update app list
+0 20 * * 5 root "__FINALPATH__/lib/update_level_apps.sh" >> "__FINALPATH__/lib/update_level_apps.log" 2>&1
+# Update badges
+0 20 * * 5 root "__FINALPATH__/lib/update_badges.sh" >> "__FINALPATH__/lib/update_badges.log" 2>&1

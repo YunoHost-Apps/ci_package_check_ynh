@@ -1,72 +1,86 @@
 {
-    "name": "Example app",
-    "id": "example",
+    "name": "CI_package_check",
+    "id": "ci_package_check",
     "packaging_format": 1,
     "description": {
-        "en": "Explain in *a few (10~15) words* the purpose of the app or what it actually does (it is meant to give a rough idea to users browsing a catalog of 100+ apps)",
-        "fr": "Expliquez en *quelques* (10~15) mots l'utilité de l'app ou ce qu'elle fait (l'objectif est de donner une idée grossière pour des utilisateurs qui naviguent dans un catalogue de 100+ apps)"
+        "en": "YunoHost continous Integration server"
     },
     "version": "1.0~ynh1",
-    "url": "https://example.com",
+    "url": "https://github.com/YunoHost/CI_package_check",
     "upstream": {
-        "license": "free",
-        "website": "https://example.com",
-        "demo": "https://demo.example.com",
-        "admindoc": "https://yunohost.org/packaging_apps",
-        "userdoc": "https://yunohost.org/apps",
-        "code": "https://some.forge.com/example/example"
+        "license": "AGPL-3.0-or-later",
+        "website": "https://github.com/YunoHost/CI_package_check",
+        "demo": "https://ci-apps.yunohost.org",
+        "code": "https://github.com/YunoHost/CI_package_check"
     },
-    "license": "free",
+    "license": "AGPL-3.0-or-later",
     "maintainer": {
-        "name": "John doe",
-        "email": "john.doe@example.com"
+        "name": "",
+        "email": ""
     },
     "requirements": {
         "yunohost": ">= 11.0.0"
     },
     "multi_instance": true,
-    "services": [
-        "nginx",
-        "php7.4-fpm",
-        "mysql"
-    ],
+    "services": [],
     "arguments": {
         "install": [
             {
-                "name": "domain",
-                "type": "domain"
-            },
-            {
-                "name": "path",
-                "type": "path",
-                "example": "/example",
-                "default": "/example"
-            },
-            {
-                "name": "is_public",
-                "type": "boolean",
-                "default": true
-            },
-            {
-                "name": "language",
+                "name": "ci_type",
                 "type": "string",
                 "ask": {
-                    "en": "Choose the application language",
-                    "fr": "Choisissez la langue de l'application"
+                    "en": "Choose the ci_type language"
                 },
-                "choices": ["fr", "en"],
-                "default": "fr"
+                "choices": [
+                    "auto",
+                    "manual"
+                ],
+                "default": "auto"
             },
             {
-                "name": "admin",
-                "type": "user"
+                "name": "cluster",
+                "type": "boolean",
+                "default": false,
+                "ask": {
+                    "en": "Is this server the first member of an LXD cluster?"
+                }
             },
             {
                 "name": "password",
                 "type": "password",
+                "optional": true,
                 "help": {
-                    "en": "Use the help field to add an information for the admin about this question.",
-                    "fr": "Utilisez le champ aide pour ajouter une information à l'intention de l'administrateur à propos de cette question."
+                    "en": "Password to join the LXD cluster."
+                }
+            },
+            {
+                "name": "yunorunner_instance",
+                "type": "string",
+                "optional": true,
+                "example": "yunorunner__2",
+                "ask": {
+                    "en": "Choose the yunorunner instance"
+                },
+                "help": {
+                    "en": "If you have already installed a YunoRunner or Jenkins instance and want to use it with CI_package_check."
+                }
+            },
+            {
+                "name": "domain",
+                "type": "domain",
+                "optional": true,
+                "help": {
+                    "en": "If you want to install a new YunoRunner for CI_package_check."
+                }
+            },
+            {
+                "name": "path",
+                "type": "path",
+                "optional": true,
+                "example": "/ci",
+                "default": "/ci",
+                "help": {
+                    "en": "If you want to install a new YunoRunner for CI_package_check."
                 }
             }
         ]
